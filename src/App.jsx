@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { LogIn, LogOut, ShieldCheck, Save } from 'lucide-react'
+import { supabase, isSupabaseConfigured } from './lib/supabase'
 import { ArrowDown, ArrowRight, CalendarDays, Camera, ChevronRight, CircleHelp, Compass, Globe2, Menu, Music2, X, Backpack, Languages, MapPin, Plane, HeartHandshake } from 'lucide-react'
 
 const menuItems = [
@@ -7,7 +9,7 @@ const menuItems = [
   ['일정','Our schedule',CalendarDays],['준비물','What to pack',Backpack],
   ['언어 배우기','Learn a language',Languages],['Q&A','Questions & answers',CircleHelp],
   ['선교 갤러리','Mission gallery',Camera],['CCM 플레이리스트','Worship playlist',Music2],
-  ['신청 안내','How to join',HeartHandshake],['비행 정보','Flight information',Plane]
+  ['신청 안내','How to join',HeartHandshake],['비행 정보','Flight information',Plane],['관리자','Administrator',ShieldCheck]
 ]
 const themes={Tropical:{main:'#2A5A3B',sub:'#5B8C5A',point:'#F4B41A',bg:'#F9F7F1'},Ocean:{main:'#1b4965',sub:'#62b6cb',point:'#fe6d73',bg:'#eef5db'},Youth:{main:'#023047',sub:'#Fb8500',point:'#ffb703',bg:'#fafafa'},Pastel:{main:'#b86f78',sub:'#e0c3fc',point:'#ffd1dc',bg:'#fff9f9'}}
 const content={
@@ -22,6 +24,32 @@ const qa=[['타클로반은 어디에 있나요?','필리핀 동부 비사야스
 
 function App(){
  const [menuOpen,setMenuOpen]=useState(false),[activePage,setActivePage]=useState('홈'),[themeName,setThemeName]=useState('Tropical'),[lang,setLang]=useState('English'),[openQA,setOpenQA]=useState(-1),[day,setDay]=useState(1)
+ const [session,setSession]=useState(null),[role,setRole]=useState('visitor'),[adminJson,setAdminJson]=useState('{"title":"타클로반 선교"}'),[adminMessage,setAdminMessage]=useState('')
+ useEffect(()=>{
+  if(!supabase)return
+  supabase.auth.getSession().then(({data})=>setSession(data.session))
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>setSession(next))
+  return ()=>subscription.unsubscribe()
+ },[])
+ useEffect(()=>{
+  let alive=true
+  async function loadRole(){
+   if(!session?.user){setRole('visitor');return}
+   const {data,error}=await supabase.from('profiles').select('role').eq('id',session.user.id).maybeSingle()
+   if(alive)setRole(!error&&data?.role==='admin'?'admin':'authenticated')
+  }
+  loadRole()
+  return ()=>{alive=false}
+ },[session])
+ const signIn=async()=>{if(!supabase)return;const {error}=await supabase.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname}});if(error)setAdminMessage(error.message)}
+ const signOut=async()=>{await supabase?.auth.signOut();setAdminMessage('로그아웃했습니다.')}
+ const saveAdminContent=async()=>{
+  if(!supabase||role!=='admin')return
+  let value
+  try{value=JSON.parse(adminJson)}catch{setAdminMessage('JSON 형식을 확인해 주세요.');return}
+  const {error}=await supabase.from('site_content').upsert({key:'mission_overview',value,updated_by:session.user.id},{onConflict:'key'})
+  setAdminMessage(error?error.message:'콘텐츠를 저장했습니다.')
+ }
  const theme=themes[themeName]
  const pageData=content[activePage]
  const go=p=>{setActivePage(p);setMenuOpen(false);window.scrollTo({top:0,behavior:'smooth'})}
@@ -30,6 +58,10 @@ function App(){
   if(activePage==='일정')return <><div className="day-switch"><button onClick={()=>setDay(Math.max(1,day-1))}>← 이전 날짜</button><strong>DAY {day}</strong><button onClick={()=>setDay(day+1)}>다음 날짜 →</button></div><div className="schedule-list">{schedule.map(([time,title])=><div className="schedule-row" key={time}><time>{time}</time><span>{title}</span></div>)}</div></>
   if(activePage==='언어 배우기')return <><div className="day-switch"><button className={lang==='English'?'active':''} onClick={()=>setLang('English')}>English</button><button className={lang==='Waray'?'active':''} onClick={()=>setLang('Waray')}>Waray</button></div><div className="info-grid">{words.map(([w,pos,meaning])=><article className="info-card word-card" key={w}><h3>{lang==='Waray'?({Hello:'Maupay nga adlaw','Thank you':'Salamat','Good morning':'Maupay nga aga',Friend:'Sangkay',Family:'Pamilya',Love:'Higugma'}[w]):w}</h3><span>{pos}</span><p>{meaning}</p></article>)}</div><p className="note">※ 기본 학습용 표현입니다. 현지 사용 표현은 확인 후 보완할 예정입니다.</p></>
   if(activePage==='Q&A')return <div className="qa-list">{qa.map(([q,a],i)=><div className="qa-item" key={q}><button onClick={()=>setOpenQA(openQA===i?-1:i)}><b>Q.</b>{q}<span>{openQA===i?'−':'＋'}</span></button>{openQA===i&&<p><b>A.</b>{a}</p>}</div>)}</div>
+  if(activePage==='관리자')return <div className="admin-panel">
+   {!isSupabaseConfigured?<><h3>Supabase 설정이 필요합니다.</h3><p>.env 파일에 Supabase URL과 anon key를 설정하고 GitHub Pages 저장소 Secrets에도 등록해야 합니다.</p></>:!session?<><h3>관리자 로그인</h3><p>Google 계정으로 로그인한 뒤 관리자 권한을 확인합니다.</p><button className="primary-button" onClick={signIn}><LogIn size={16}/> Google로 로그인</button></>:<><div className="admin-user"><span>{session.user.email}</span><span className={role==='admin'?'role-admin':'role-user'}>{role==='admin'?'관리자':'일반 사용자'}</span><button onClick={signOut}><LogOut size={15}/> 로그아웃</button></div>{role==='admin'?<><h3>선교 콘텐츠 관리</h3><p>콘텐츠 JSON을 수정하고 저장할 수 있습니다. 저장 데이터는 site_content 테이블에 기록됩니다.</p><textarea value={adminJson} onChange={e=>setAdminJson(e.target.value)} rows={10}/><button className="primary-button" onClick={saveAdminContent}><Save size={16}/> 저장하기</button></>:<p>현재 계정은 관리자 권한이 없습니다. 프로젝트 관리자가 profiles 테이블에서 role을 admin으로 지정해야 합니다.</p>}</>}
+   {adminMessage&&<p className="admin-message">{adminMessage}</p>}
+  </div>
   if(activePage==='선교 갤러리')return <div className="empty-state"><Camera size={30}/><h3>선교의 순간을 기록할 공간</h3><p>사진 갤러리는 관리자 업로드 및 열람 권한 설정을 연결한 뒤 사용할 수 있습니다.</p></div>
   if(activePage==='CCM 플레이리스트')return <div className="empty-state"><Music2 size={30}/><h3>함께 드리는 찬양</h3><p>관리자가 음원과 가사, 앨범 커버를 등록하면 이곳에서 재생할 수 있습니다.</p></div>
   if(activePage==='비행 정보')return <div className="empty-state"><Plane size={30}/><h3>항공 여정 안내</h3><p>출국편과 귀국편, 경유 정보는 항공권 확정 후 업데이트됩니다.</p></div>
