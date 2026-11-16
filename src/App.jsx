@@ -1,110 +1,45 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import {
-  ArrowDown, ArrowRight, CalendarDays, Camera, ChevronRight,
-  CircleHelp, Clock3, Compass, Globe2, HeartHandshake, Menu,
-  Music2, Plane, X, Backpack, Languages, MapPin
-} from 'lucide-react'
+import { ArrowDown, ArrowRight, CalendarDays, Camera, ChevronRight, CircleHelp, Compass, Globe2, Menu, Music2, X, Backpack, Languages, MapPin, Plane, HeartHandshake } from 'lucide-react'
 
 const menuItems = [
-  { label: '자세히 보기', en: 'Mission overview', icon: Compass },
-  { label: 'About 타클로반', en: 'Discover Tacloban', icon: Globe2 },
-  { label: '일정', en: 'Our schedule', icon: CalendarDays },
-  { label: '준비물', en: 'What to pack', icon: Backpack },
-  { label: '언어 배우기', en: 'Learn a language', icon: Languages },
-  { label: 'Q&A', en: 'Questions & answers', icon: CircleHelp },
-  { label: '선교 갤러리', en: 'Mission gallery', icon: Camera },
-  { label: 'CCM 플레이리스트', en: 'Worship playlist', icon: Music2 },
+  ['자세히 보기','Mission overview',Compass],['About 타클로반','Discover Tacloban',Globe2],
+  ['일정','Our schedule',CalendarDays],['준비물','What to pack',Backpack],
+  ['언어 배우기','Learn a language',Languages],['Q&A','Questions & answers',CircleHelp],
+  ['선교 갤러리','Mission gallery',Camera],['CCM 플레이리스트','Worship playlist',Music2],
+  ['신청 안내','How to join',HeartHandshake],['비행 정보','Flight information',Plane]
 ]
-
-const themes = {
-  Tropical: { main: '#2A5A3B', sub: '#5B8C5A', point: '#F4B41A', bg: '#F9F7F1' },
-  Ocean: { main: '#1b4965', sub: '#62b6cb', point: '#fe6d73', bg: '#eef5db' },
-  Youth: { main: '#023047', sub: '#Fb8500', point: '#ffb703', bg: '#fafafa' },
-  Pastel: { main: '#ffb7b2', sub: '#e0c3fc', point: '#ffd1dc', bg: '#fff9f9' },
+const themes={Tropical:{main:'#2A5A3B',sub:'#5B8C5A',point:'#F4B41A',bg:'#F9F7F1'},Ocean:{main:'#1b4965',sub:'#62b6cb',point:'#fe6d73',bg:'#eef5db'},Youth:{main:'#023047',sub:'#Fb8500',point:'#ffb703',bg:'#fafafa'},Pastel:{main:'#b86f78',sub:'#e0c3fc',point:'#ffd1dc',bg:'#fff9f9'}}
+const content={
+ '자세히 보기':{kicker:'MISSION OVERVIEW',title:'함께 만드는 선교의 여정',lead:'타클로반에서 사랑을 나누고, 함께 배우며, 서로의 이야기를 듣습니다.',sections:[['선교 지역','필리핀 동부 비사야스 지역의 레이테섬, 타클로반 시티'],['선교 기간','날짜 및 세부 일정은 확정 후 공지합니다.'],['참가 비용','항공 및 현지 사역 비용은 추후 안내합니다.'],['참가 대상','함께 섬기며 배우고 싶은 모든 참가자']]},
+ 'About 타클로반':{kicker:'DISCOVER TACLOBAN',title:'바다와 삶이 만나는 도시',lead:'타클로반은 필리핀 동부 비사야스 지역 레이테섬의 중심 도시입니다.',sections:[['위치','레이테만을 마주한 필리핀 동부의 항구 도시'],['기후','열대성 기후로 연중 기온과 습도가 높은 편입니다.'],['언어','와라이어와 필리핀 공용어인 필리피노, 영어가 사용됩니다.'],['문화','지역 공동체와 가족 중심의 문화가 생활 곳곳에 자리합니다.']]},
+ '준비물':{kicker:'PACKING CHECKLIST',title:'여행을 위한 준비',lead:'출발 전 아래 항목을 확인하고 개인 상황에 맞게 준비하세요.',sections:[['여권 및 서류','유효기간을 확인한 여권, 항공권 및 필요한 여행 서류'],['의류','가볍고 통기성이 좋은 옷, 예배 및 사역용 단정한 복장'],['개인용품','세면도구, 개인 상비약, 자외선 차단제, 모기 기피제'],['전자기기','휴대전화, 충전기, 보조배터리, 현지 콘센트용 어댑터']]},
+ '신청 안내':{kicker:'JOIN THE MISSION',title:'우리의 여정에 함께하세요',lead:'참가 일정과 비용이 확정되면 신청 절차 및 마감일을 이곳에 공지합니다.',sections:[['참가 대상','선교 활동에 관심 있는 참가자'],['신청 절차','신청서 제출 → 담당자 확인 → 참가 안내'],['참가 비용','항공료 및 현지 체류·사역 비용은 추후 공지'],['문의','세부 문의 채널은 준비 후 공개합니다.']]},
 }
+const schedule=[['08:00','아침 묵상 및 기도'],['09:00','현지 사역 준비'],['10:00','현지 교회 및 지역 방문'],['12:00','점심 및 휴식'],['14:00','어린이·지역 커뮤니티 사역'],['17:00','정리 및 팀 나눔'],['19:00','저녁 예배 및 기도']]
+const words=[['Hello','인사','안녕하세요'],['Thank you','표현','감사합니다'],['Good morning','인사','좋은 아침입니다'],['Friend','명사','친구'],['Family','명사','가족'],['Love','명사/동사','사랑 / 사랑하다']]
+const qa=[['타클로반은 어디에 있나요?','필리핀 동부 비사야스 지역 레이테섬에 있는 도시입니다.'],['현지에서 어떤 언어를 사용하나요?','와라이어, 필리피노, 영어가 사용됩니다.'],['참가 준비물은 어디서 확인하나요?','메뉴의 준비물 페이지에서 기본 준비 목록을 확인할 수 있습니다.'],['참가 신청은 언제 열리나요?','일정과 비용이 확정되면 신청 안내 페이지에 공지합니다.']]
 
-function App() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [activePage, setActivePage] = useState('홈')
-  const [themeName, setThemeName] = useState('Tropical')
-  const theme = themes[themeName]
-
-  const navigate = (page) => {
-    setActivePage(page)
-    setMenuOpen(false)
-  }
-
-  return (
-    <div className="app-shell" style={{ '--main': theme.main, '--sub': theme.sub, '--point': theme.point, '--paper': theme.bg }}>
-      <header className="topbar">
-        <button className="menu-trigger" aria-label="메뉴 열기" onClick={() => setMenuOpen(true)}>
-          <Menu size={23} strokeWidth={1.8} />
-        </button>
-        <button className="wordmark" onClick={() => navigate('홈')}>
-          <span className="wordmark-mark">T</span>
-          <span>TKMC<span className="wordmark-dot">.</span></span>
-        </button>
-        <div className="topbar-right"><span className="edition">MISSION TRIP · 2026</span><span className="status-dot" /></div>
-      </header>
-
-      <main>
-        {activePage === '홈' ? (
-          <section className="hero">
-            <div className="hero-image" />
-            <div className="hero-shade" />
-            <div className="hero-content">
-              <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .7 }}>
-                <div className="eyebrow"><span /> PHILIPPINES · EASTERN VISAYAS</div>
-                <h1>마음이 향하는 곳,<br /><em>타클로반</em>으로.</h1>
-                <p className="hero-copy">작은 사랑을 모아 큰 희망을 전하는 여정.<br />우리의 발걸음이 누군가의 내일에 빛이 되기를.</p>
-                <div className="hero-actions">
-                  <button className="primary-button" onClick={() => navigate('자세히 보기')}>선교 자세히 보기 <ArrowRight size={17} /></button>
-                  <button className="text-button" onClick={() => navigate('신청 안내')}>참가 신청 <ChevronRight size={16} /></button>
-                </div>
-              </motion.div>
-            </div>
-            <div className="hero-bottom">
-              <div className="countdown"><span className="count-label">DEPARTURE COUNTDOWN</span><strong>D<span>-</span>DAY</strong><small>출국일을 기다리고 있어요</small></div>
-              <div className="hero-location"><MapPin size={15} /> TACLOBAN CITY, LEYTE <span>11.24° N / 125.00° E</span></div>
-            </div>
-            <div className="scroll-cue"><span>SCROLL TO EXPLORE</span><ArrowDown size={15} /></div>
-          </section>
-        ) : (
-          <section className="placeholder-page">
-            <div className="eyebrow dark"><span /> TACLOBAN MISSION · 2026</div>
-            <p className="page-kicker">OUR JOURNEY</p>
-            <h1>{activePage}</h1>
-            <p className="placeholder-copy">이 페이지는 다음 개발 단계에서 내용을 채울 예정입니다.</p>
-            <button className="primary-button" onClick={() => navigate('홈')}>홈으로 돌아가기 <ArrowRight size={17} /></button>
-          </section>
-        )}
-
-        <section className="intro-strip">
-          <div><span className="strip-index">01 / OUR PURPOSE</span><h2>함께하는 마음이<br />변화를 만듭니다.</h2></div>
-          <p>타클로반에서 만날 사람들, 함께 나눌 이야기,<br className="desktop-break" /> 그리고 그곳에서 시작될 새로운 마음을 기대합니다.</p>
-          <button className="round-link" aria-label="자세히 보기" onClick={() => navigate('자세히 보기')}><ArrowRight size={20} /></button>
-        </section>
-      </main>
-
-      <footer className="footer"><span>TKMC <b>·</b> TACLOBAN MISSION</span><span>GO WITH LOVE. SERVE WITH JOY.</span></footer>
-
-      <AnimatePresence>
-        {menuOpen && <>
-          <motion.div className="menu-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setMenuOpen(false)} />
-          <motion.aside className="side-menu" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 28, stiffness: 240 }}>
-            <div className="menu-head"><div className="menu-brand"><span className="wordmark-mark">T</span><span>TKMC<span className="wordmark-dot">.</span></span></div><button className="close-menu" onClick={() => setMenuOpen(false)} aria-label="메뉴 닫기"><X /></button></div>
-            <div className="menu-overline">EXPLORE THE JOURNEY</div>
-            <nav>{menuItems.map((item, index) => {
-              const Icon = item.icon
-              return <button className="nav-item" key={item.label} onClick={() => navigate(item.label)}><span className="nav-icon"><Icon size={18} /></span><span className="nav-copy"><strong>{item.label}</strong><small>{item.en}</small></span><span className="nav-number">0{index + 1}</span></button>
-            })}</nav>
-            <div className="menu-bottom"><div className="menu-overline">THEME PREVIEW</div><div className="theme-options">{Object.entries(themes).map(([name, colors]) => <button key={name} className={themeName === name ? 'theme-chip selected' : 'theme-chip'} onClick={() => setThemeName(name)} aria-label={name}><i style={{ background: colors.main }} /><i style={{ background: colors.sub }} /><i style={{ background: colors.point }} /></button>)}</div><p>ONE HEART, ONE PURPOSE.</p></div>
-          </motion.aside>
-        </>}
-      </AnimatePresence>
-    </div>
-  )
+function App(){
+ const [menuOpen,setMenuOpen]=useState(false),[activePage,setActivePage]=useState('홈'),[themeName,setThemeName]=useState('Tropical'),[lang,setLang]=useState('English'),[openQA,setOpenQA]=useState(-1),[day,setDay]=useState(1)
+ const theme=themes[themeName]
+ const pageData=content[activePage]
+ const go=p=>{setActivePage(p);setMenuOpen(false);window.scrollTo({top:0,behavior:'smooth'})}
+ const pageBody=useMemo(()=>{
+  if(pageData)return <div className="info-grid">{pageData.sections.map(([h,t],i)=><article className="info-card" key={h}><span>0{i+1}</span><h3>{h}</h3><p>{t}</p></article>)}</div>
+  if(activePage==='일정')return <><div className="day-switch"><button onClick={()=>setDay(Math.max(1,day-1))}>← 이전 날짜</button><strong>DAY {day}</strong><button onClick={()=>setDay(day+1)}>다음 날짜 →</button></div><div className="schedule-list">{schedule.map(([time,title])=><div className="schedule-row" key={time}><time>{time}</time><span>{title}</span></div>)}</div></>
+  if(activePage==='언어 배우기')return <><div className="day-switch"><button className={lang==='English'?'active':''} onClick={()=>setLang('English')}>English</button><button className={lang==='Waray'?'active':''} onClick={()=>setLang('Waray')}>Waray</button></div><div className="info-grid">{words.map(([w,pos,meaning])=><article className="info-card word-card" key={w}><h3>{lang==='Waray'?({Hello:'Maupay nga adlaw','Thank you':'Salamat','Good morning':'Maupay nga aga',Friend:'Sangkay',Family:'Pamilya',Love:'Higugma'}[w]):w}</h3><span>{pos}</span><p>{meaning}</p></article>)}</div><p className="note">※ 기본 학습용 표현입니다. 현지 사용 표현은 확인 후 보완할 예정입니다.</p></>
+  if(activePage==='Q&A')return <div className="qa-list">{qa.map(([q,a],i)=><div className="qa-item" key={q}><button onClick={()=>setOpenQA(openQA===i?-1:i)}><b>Q.</b>{q}<span>{openQA===i?'−':'＋'}</span></button>{openQA===i&&<p><b>A.</b>{a}</p>}</div>)}</div>
+  if(activePage==='선교 갤러리')return <div className="empty-state"><Camera size={30}/><h3>선교의 순간을 기록할 공간</h3><p>사진 갤러리는 관리자 업로드 및 열람 권한 설정을 연결한 뒤 사용할 수 있습니다.</p></div>
+  if(activePage==='CCM 플레이리스트')return <div className="empty-state"><Music2 size={30}/><h3>함께 드리는 찬양</h3><p>관리자가 음원과 가사, 앨범 커버를 등록하면 이곳에서 재생할 수 있습니다.</p></div>
+  if(activePage==='비행 정보')return <div className="empty-state"><Plane size={30}/><h3>항공 여정 안내</h3><p>출국편과 귀국편, 경유 정보는 항공권 확정 후 업데이트됩니다.</p></div>
+  return null
+ },[pageData,activePage,day,lang,openQA])
+ return <div className="app-shell" style={{'--main':theme.main,'--sub':theme.sub,'--point':theme.point,'--paper':theme.bg}}>
+  <header className="topbar"><button className="menu-trigger" aria-label="메뉴 열기" onClick={()=>setMenuOpen(true)}><Menu size={23}/></button><button className="wordmark" onClick={()=>go('홈')}><span className="wordmark-mark">T</span><span>TKMC<span className="wordmark-dot">.</span></span></button><div className="topbar-right"><span className="edition">MISSION TRIP · 2026</span><span className="status-dot"/></div></header>
+  <main>{activePage==='홈'?<><section className="hero"><div className="hero-image"/><div className="hero-shade"/><div className="hero-content"><motion.div initial={{opacity:0,y:18}} animate={{opacity:1,y:0}} transition={{duration:.7}}><div className="eyebrow"><span/> PHILIPPINES · EASTERN VISAYAS</div><h1>마음이 향하는 곳,<br/><em>타클로반</em>으로.</h1><p className="hero-copy">작은 사랑을 모아 큰 희망을 전하는 여정.<br/>우리의 발걸음이 누군가의 내일에 빛이 되기를.</p><div className="hero-actions"><button className="primary-button" onClick={()=>go('자세히 보기')}>선교 자세히 보기 <ArrowRight size={17}/></button><button className="text-button" onClick={()=>go('신청 안내')}>참가 신청 <ChevronRight size={16}/></button></div></motion.div></div><div className="hero-bottom"><div className="countdown"><span className="count-label">DEPARTURE COUNTDOWN</span><strong>D<span>-</span>DAY</strong><small>출국일을 기다리고 있어요</small></div><div className="hero-location"><MapPin size={15}/> TACLOBAN CITY, LEYTE <span>11.24° N / 125.00° E</span></div></div><div className="scroll-cue"><span>SCROLL TO EXPLORE</span><ArrowDown size={15}/></div></section><section className="intro-strip"><div><span className="strip-index">01 / OUR PURPOSE</span><h2>함께하는 마음이<br/>변화를 만듭니다.</h2></div><p>타클로반에서 만날 사람들, 함께 나눌 이야기,<br className="desktop-break"/> 그리고 그곳에서 시작될 새로운 마음을 기대합니다.</p><button className="round-link" onClick={()=>go('자세히 보기')}><ArrowRight size={20}/></button></section></>:<section className="content-page"><div className="eyebrow dark"><span/> TACLOBAN MISSION · 2026</div><p className="page-kicker">{pageData?.kicker||'OUR JOURNEY'}</p><h1>{pageData?.title||activePage}</h1><p className="page-lead">{pageData?.lead||'함께 배우고 섬기는 타클로반 선교 여정입니다.'}</p>{pageBody}<button className="back-home" onClick={()=>go('홈')}>← 홈으로 돌아가기</button></section>}</main>
+  <footer className="footer"><span>TKMC <b>·</b> TACLOBAN MISSION</span><span>GO WITH LOVE. SERVE WITH JOY.</span></footer>
+  <AnimatePresence>{menuOpen&&<><motion.div className="menu-backdrop" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setMenuOpen(false)}/><motion.aside className="side-menu" initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring',damping:28,stiffness:240}}><div className="menu-head"><div className="menu-brand"><span className="wordmark-mark">T</span><span>TKMC<span className="wordmark-dot">.</span></span></div><button className="close-menu" onClick={()=>setMenuOpen(false)}><X/></button></div><div className="menu-overline">EXPLORE THE JOURNEY</div><nav>{menuItems.map(([label,en,Icon],i)=><button className="nav-item" key={label} onClick={()=>go(label)}><span className="nav-icon"><Icon size={18}/></span><span className="nav-copy"><strong>{label}</strong><small>{en}</small></span><span className="nav-number">0{i+1}</span></button>)}</nav><div className="menu-bottom"><div className="menu-overline">THEME PREVIEW</div><div className="theme-options">{Object.entries(themes).map(([name,c])=><button key={name} className={themeName===name?'theme-chip selected':'theme-chip'} onClick={()=>setThemeName(name)} aria-label={name}><i style={{background:c.main}}/><i style={{background:c.sub}}/><i style={{background:c.point}}/></button>)}</div><p>ONE HEART, ONE PURPOSE.</p></div></motion.aside></>}</AnimatePresence>
+ </div>
 }
-
 export default App
